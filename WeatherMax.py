@@ -1,34 +1,49 @@
-def tempLists(filName):
-    with open(filName, 'r') as f:
-        minT = 0
-        dateList = []
-        maxList2 = []
-        bList = []
-        minList3 = []
-        meanHumList = []
-        mContents = []
-        mContents = f.readline()
+def reading_file(file_name):
+    file = open(file_name, "r")
+    Counter = 0
+    # Reading from file
+    Content = file.read()
+    CoList = Content.split("\n")
+    for i in CoList:
+        if i:
+            Counter += 1
+    return Counter
+
+
+def make_temperature_lists(file_name):
+    with open(file_name, 'r') as f:
+        min_temperature = 0
+        file_size = reading_file(file_name)
+        date_list = []
+        max_temperature_list = []
+        make_list = []
+        min_temperature_list = []
+        mean_list_humidity = []
+        file_contents = []
+        file_contents = f.readline()
         i = 1
-        while i <= 31:
-            mContents = f.readline()
-            bList = mContents.split(',')
-            maxList2.append(bList[1])
-            minList3.append(bList[3])
-            meanHumList.append(bList[9])
-            dateList.append(bList[0])
+        while i < file_size:
+            file_contents = f.readline()
+            make_list = file_contents.split(',')
+            max_temperature_list.append(make_list[1])
+            min_temperature_list.append(make_list[3])
+            mean_list_humidity.append(make_list[9])
+            date_list.append(make_list[0])
             i += 1
-        minT = minTemp(minList3)
-        maxTemp1 = maxTemp(maxList2)
-        print(f'Max temp for the month is : {maxList2[maxTemp1]}C on the date {date(dateList, maxTemp1)}')
-        print(f'Min temp for the month is : {minList3[minT]}C on the date {date(dateList, minT)}')
-        print(f'Max Average temp is {avgTemp(maxList2)}C ')
-        print(f'Min Average temp is {avgTemp(minList3)}C ')
-        print(f'Max Mean Humidity is {avgTemp(meanHumList)}% ')
-        maxBarChart(maxList2, minList3)
-        maxBarChartHorizontal(maxList2, minList3)
+        min_temperature = minimum_temp(min_temperature_list)
+        max_temperature = maximum_temp(max_temperature_list)
+        print(f'Max temp for the month is : {max_temperature_list[max_temperature]}C on the date '
+              f'{temp_date(date_list, max_temperature)}')
+        print(f'Min temp for the month is : {min_temperature_list[min_temperature]}C on the date '
+              f'{temp_date(date_list, min_temperature)}')
+        print(f'Max Average temp is {average_temp(max_temperature_list)}C ')
+        print(f'Min Average temp is {average_temp(min_temperature_list)}C ')
+        print(f'Max Mean Humidity is {average_temp(mean_list_humidity)}% ')
+        bar_charts(max_temperature_list, min_temperature_list)
+        horizontal_bar_charts(max_temperature_list, min_temperature_list)
 
 
-def maxBarChartHorizontal(l1, l2):
+def horizontal_bar_charts(l1, l2):
     temp1 = 0
     Red = "\033[31m"
     Blue = "\033[34m"
@@ -41,6 +56,7 @@ def maxBarChartHorizontal(l1, l2):
             temp2 = 0
             temp3 = 0
             temp4 = 0
+            print(temp1+1, end='')
             while temp2 < float(l2[temp1]):
                 print(Blue + '+', end='')
                 temp2 += 1
@@ -57,7 +73,7 @@ def maxBarChartHorizontal(l1, l2):
     print('')
 
 
-def maxBarChart(l1, l2):
+def bar_charts(l1, l2):
     k = 0
     Red = "\033[31m"
     Blue = "\033[34m"
@@ -86,11 +102,11 @@ def maxBarChart(l1, l2):
     print('')
 
 
-def date(l1, indx):
-    return l1[indx]
+def temp_date(l1, index):
+    return l1[index]
 
 
-def avgTemp(l1):
+def average_temp(l1):
     sum1 = 0
     count = 0
     i = 0
@@ -102,7 +118,7 @@ def avgTemp(l1):
     return sum1 / count
 
 
-def maxTemp(l1):
+def maximum_temp(l1):
     maxi = ''
     maxi2 = 0
     i = 0
@@ -116,7 +132,7 @@ def maxTemp(l1):
     return maxi2
 
 
-def minTemp(l1):
+def minimum_temp(l1):
     min1 = l1[0]
     min2 = 0
     j = 1
@@ -130,19 +146,14 @@ def minTemp(l1):
         j += 1
     return min2
 
-
-def readfile(name):
-    fContents = []
-    with open(name, 'r') as f:
-        fContents = f.readlines()
-        return fContents
-
-
 # main
+# Provide month and year it will calculate the minimum,Maximum average Max temperature Average Min temperature
+# and bar charts horizontal and simple bar charts
 
 
-name = input("Enter the month (Jan/Aug/Dec/Mar) ")
+month_name = input("Enter the month (Jan/Aug/Dec/Mar) ")
 year = input("Enter the year (2004/2008) ")
-fName = f'Murree_weather_{year}_{name}.txt'
-readfile(fName)
-tempLists(fName)
+file_Name = f'Murree_weather_{year}_{month_name}.txt'
+reading_file(file_Name)
+make_temperature_lists(file_Name)
+
