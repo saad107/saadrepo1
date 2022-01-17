@@ -2,60 +2,58 @@ import os
 import sys
 
 
-def weatherMonth(year, month, res):
+def weather_month(year, month, calculate):
     file_name = ''
-    arr = os.listdir('.')
-    for item in arr:
+    file_reading = os.listdir('.')
+    for item in file_reading:
         if year in item and month in item:  # given year or month
             file_name = item
-    make_month_lists(file_name, res)
+    make_month_lists(file_name, calculate)
 
 
-def make_month_lists(file_name, res):
+def make_month_lists(file_name, calculate):
     with open(file_name, 'r') as file:
         size_of_the_file = file_size(file_name)
-        dateM_list = []
+        date_reading = []
         maximum_temperature_reading = []
         minimum_temperature_reading = []
         mean_humidity_reading = []
         file_contents = file.readline()
-        i = 1
-        while i < size_of_the_file:
+        for iterator in range(1, size_of_the_file):
             file_contents = file.readline()
-            make_tlist = file_contents.split(',')
-            maximum_temperature_reading.append(make_tlist[1])
-            minimum_temperature_reading.append(make_tlist[3])
-            mean_humidity_reading.append(make_tlist[9])
-            dateM_list.append(make_tlist[0])
-            i += 1
-    if res == '-a':
-        calculate_average(maximum_temperature_reading, minimum_temperature_reading, mean_humidity_reading)
-    elif res == '-c':
-        display_bar_charts(maximum_temperature_reading,minimum_temperature_reading)
+            make_reading = file_contents.split(',')
+            maximum_temperature_reading.append(make_reading[1])
+            minimum_temperature_reading.append(make_reading[3])
+            mean_humidity_reading.append(make_reading[9])
+            date_reading.append(make_reading[0])
+    if calculate == '-a':
+        calculate_average(maximum_temperature_reading, minimum_temperature_reading,
+                          mean_humidity_reading)
+    elif calculate == '-c':
+        display_bar_charts(maximum_temperature_reading, minimum_temperature_reading)
 
 
-def calculate_average(l1, l2, l3):
-    maximum_average_temperature = average_temp(l1)
-    minimum_average_temperature = average_temp(l2)
-    humidity_average = average_temp(l3)
-    display_average_temperatures(maximum_average_temperature, minimum_average_temperature, humidity_average)
+def calculate_average(maximum_reading, minimum_reading, mean_reading):
+    maximum_average_temperature = average_temp(maximum_reading)
+    minimum_average_temperature = average_temp(minimum_reading)
+    humidity_average = average_temp(mean_reading)
+    display_average_temperatures(maximum_average_temperature,
+                                 minimum_average_temperature, humidity_average)
 
 
-def display_bar_charts(temperature_reading1,temperature_reading2):
+def display_bar_charts(temperature_reading1, temperature_reading2):
     bar_charts(temperature_reading1, temperature_reading2)
     horizontal_bar_charts_weather(temperature_reading1, temperature_reading2)
 
 
 def average_temp(temperature_reading):
-    sum1 = 0
+    total = 0
     count = 0
-    iterator = 0
-    while iterator < len(temperature_reading):
+    for iterator in range(0, len(temperature_reading)):
         if temperature_reading[iterator] != '':
-            sum1 = sum1 + float(temperature_reading[iterator])
+            total = total + float(temperature_reading[iterator])
             count += 1
-        iterator += 1
-    return sum1 / count
+    return total / count
 
 
 def display_average_temperatures(maxiM_average, minM_average, humidity_average):
@@ -64,115 +62,113 @@ def display_average_temperatures(maxiM_average, minM_average, humidity_average):
     print(f'Average Humidity : {humidity_average}%')
 
 
-def bar_charts(l1, l2):
-    iterator = 0
+def bar_charts(temperature_reading_maximum, temperature_reading_minimum):
     Red = "\033[31m"
     Blue = "\033[34m"
-    while iterator < len(l2):
-        if l1[iterator] == '':
+    for iterator in range(0, len(temperature_reading_minimum)):
+        if temperature_reading_maximum[iterator] == '':
             print('', end='')
         else:
             White = "\033[37m"
             print(White, iterator + 1, end='')
-            display_blue_barchart(float(l1[iterator]), Red)
+            display_blue_barchart(float(temperature_reading_maximum[iterator]), Red)
+            print(White, int(temperature_reading_maximum[iterator]), end='')
             print('')
-            print(White,iterator + 1, end='')
-            display_blue_barchart(float(l2[iterator]), Blue)
+            print(White, iterator + 1, end='')
+            display_blue_barchart(float(temperature_reading_minimum[iterator]), Blue)
+            print(White, f'{int(temperature_reading_minimum[iterator])}C', end='')
             print('')
-        iterator += 1
 
 
-def horizontal_bar_charts_weather(l1, l2):
-    iterator = 0
+def horizontal_bar_charts_weather(temperature_reading_maximum, temperature_reading_minimum):
     Red = "\033[31m"
     Blue = "\033[34m"
-    while iterator < len(l2):
-        if l1[iterator] =='':
+    for iterator in range(0, len(temperature_reading_minimum)-1):
+        if temperature_reading_maximum[iterator] == '':
             print('', end='')
         else:
+            White = "\033[37m"
             print(iterator+1, end='')
-            display_blue_barchart(float(l1[iterator]), Red)
-            display_blue_barchart(float(l1[iterator]), Blue)
+            display_blue_barchart(float(temperature_reading_maximum[iterator]), Red)
+            display_blue_barchart(float(temperature_reading_minimum[iterator]), Blue)
+            print(White, f'{int(temperature_reading_maximum[iterator])}C-'
+                  f'{int(temperature_reading_minimum[iterator])}C', end='')
             print('')
-        iterator += 1
 
 
 def display_blue_barchart(number, color):
     iterate = 1
-
     while iterate <= number:
         print(color + '+', end='')
         iterate += 1
 
+
 # For year
 
 
-def weatherMan(year):
-    arr = os.listdir('.')
-    file_lists = []
-    for item in arr:
+def weather_man(year):
+    files = os.listdir('.')
+    file_reading = []
+    for item in files:
         if year in item:  # given year or month
-            file_lists.append(item)
-    size = len(file_lists)
-    making_year_temperature_readings(file_lists, size)
+            file_reading.append(item)
+    size = len(file_reading)
+    making_year_temperature_readings(file_reading, size)
 
 
-def making_year_temperature_readings(l1, number_of_the_files):
-    max_temp = []
-    min_temp = []
-    min_date = []
-    max_date = []
+def making_year_temperature_readings(file_readings, number_of_the_files):
+    maximum_temperatures = []
+    minimum_temperatures = []
+    minimum_temperature_dates = []
+    maximum_temperature_dates = []
     mean_humidity = []
-    mean_date = []
-    iterator = 0
-    while iterator < number_of_the_files:
+    mean_humidity_dates = []                 # I need these variables in and after the for loop
+    for iterator in range(0, number_of_the_files):
         max_temperature_reading, min_temperature_reading, mean_humidity_reading, date_reading = \
-            make_temperature_readings(l1[iterator])     # 1st function
+         make_temperature_readings(file_readings[iterator])     # 1st function
         # we are calculating max month temp of every month in every iteration
         index_max = calculate_maximum_temperature(max_temperature_reading)
-        max_temp1 = max_temperature_reading[index_max]
-        max_temp.append(max_temp1)
-        max_date.append(temp_date(date_reading, index_max))
+        maximum_temperature = max_temperature_reading[index_max]
+        maximum_temperatures.append(maximum_temperature)
+        maximum_temperature_dates.append(calculate_date(date_reading, index_max))
 
         # minimum
         index_min = calculate_minimum_temperature(min_temperature_reading)
-        min_temp1 = min_temperature_reading[index_min]
-        min_temp.append(min_temp1)
-        min_date.append(temp_date(date_reading, index_min))
+        minimum_temperature = min_temperature_reading[index_min]
+        minimum_temperatures.append(minimum_temperature)
+        minimum_temperature_dates.append(calculate_date(date_reading, index_min))
         # humidity
         index_mean = calculate_maximum_temperature(mean_humidity_reading)
-        mean_temp1 = mean_humidity_reading[index_max]
-        mean_humidity.append(mean_temp1)
-        mean_date.append(temp_date(date_reading, index_mean))
+        mean_humidity1 = mean_humidity_reading[index_max]
+        mean_humidity.append(mean_humidity1)
+        mean_humidity_dates.append(calculate_date(date_reading, index_mean))
 
-        iterator += 1
-    make_results(max_temp, max_date, min_temp, min_date, mean_humidity, mean_date)  # 2nd function
+    display_results(maximum_temperatures, maximum_temperature_dates,
+                    minimum_temperatures, minimum_temperature_dates,
+                    mean_humidity, mean_humidity_dates)             # 2nd function
 
 # 1st function
 
 
-def temp_date(l1, index):
-    return l1[index]
+def calculate_date(date_reading, index):
+    return date_reading[index]
 
 
 def make_temperature_readings(file_name):
     with open(file_name, 'r') as file:
-        min_temperature = 0
         size_of_the_file = file_size(file_name)
         date_reading = []
         max_temperature_reading = []
         min_temperature_reading = []
         mean_humidity_reading = []
         file_contents = file.readline()
-        iterator = 1
-        while iterator < size_of_the_file:
+        for iterator in range(1, size_of_the_file):
             file_contents = file.readline()
             reading_file = file_contents.split(',')
             max_temperature_reading.append(reading_file[1])
             min_temperature_reading.append(reading_file[3])
             mean_humidity_reading.append(reading_file[9])
             date_reading.append(reading_file[0])
-            iterator += 1
     return max_temperature_reading, min_temperature_reading, mean_humidity_reading, date_reading
 
 
@@ -181,8 +177,8 @@ def file_size(file_name):
     counter = 0
     # Reading from file
     Content = file.read()
-    co_list = Content.split("\n")
-    for iterator in co_list:
+    line_reading = Content.split("\n")
+    for iterator in line_reading:
         if iterator:
             counter += 1
     return counter
@@ -190,8 +186,10 @@ def file_size(file_name):
 
 # 2nd function
 
-def make_results(maximum_reading, date_reading_max, minimum_reading, date_reading_min,
-                 humidity_reading, date_reading_humidity):
+def display_results(maximum_reading, date_reading_max,
+                    minimum_reading, date_reading_min,
+                    humidity_reading, date_reading_humidity):
+
     index_maximum_temperature = calculate_maximum_temperature(maximum_reading)
     index_minimum_temperature = calculate_minimum_temperature(minimum_reading)
     index_maximum_humidity = calculate_maximum_temperature(humidity_reading)
@@ -203,43 +201,48 @@ def make_results(maximum_reading, date_reading_max, minimum_reading, date_readin
           f'{date_reading_humidity[index_maximum_humidity]}')
 
 
-def calculate_maximum_temperature(l1):
+def calculate_maximum_temperature(temperature_readings):
     maximum1 = 0
-    iterator = 0
-    while iterator < len(l1):
-        if l1[iterator] != '':
-            if float(l1[iterator]) >= maximum1:
-                maximum1 = float(l1[iterator])
+    for iterator in range(0, len(temperature_readings)):
+        if temperature_readings[iterator] != '':
+            if float(temperature_readings[iterator]) >= maximum1:
+                maximum1 = float(temperature_readings[iterator])
                 maximum2 = iterator
             else:
-                l1[iterator] = l1[iterator]
-        iterator += 1
+                temperature_readings[iterator] = temperature_readings[iterator]
     return maximum2
 
 
-def calculate_minimum_temperature(l1):
-    min1 = float(l1[0])
-    min2 = 0
-    iterator = 1
-    while iterator < len(l1):
-        if l1[iterator] != '':
-            if float(l1[iterator]) < min1:
-                min1 = float(l1[iterator])
-                min2 = iterator
+def calculate_minimum_temperature(temperature_readings):
+    minimum1 = float(temperature_readings[0])
+    minimum2 = 0
+    for iterator in range(1, len(temperature_readings)):
+        if temperature_readings[iterator] != '':
+            if float(temperature_readings[iterator]) < minimum1:
+                minimum1 = float(temperature_readings[iterator])
+                minimum2 = iterator
             else:
-                min1 = min1
-        iterator += 1
-    return min2
+                minimum1 = minimum1
+    return minimum2
 
 
 # Main
 
+if __name__ == '__main__':
 
-months = ['Jan', 'Feb', 'Mar', 'April', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-if len(sys.argv) == 3:
-    name = sys.argv[1].split('/')
-    name.append(sys.argv[2])
-    if len(name) == 3:
-        weatherMonth(name[0], months[int(name[1])-1], name[2])
-    elif len(name) == 2:
-        weatherMan(name[0])
+    months = ['Jan', 'Feb', 'Mar',
+              'April', 'May', 'Jun',
+              'Jul', 'Aug', 'Sep',
+              'Oct', 'Nov', 'Dec']
+    if len(sys.argv) == 3:
+        name = sys.argv[1].split('/')
+        name.append(sys.argv[2])
+        if len(name) == 3 and sys.argv[2] == '-c' or sys.argv[2] == '-a':
+            weather_month(name[0], months[int(name[1])-1], name[2])
+        elif len(name) == 2 and name[1] == '-e':
+            weather_man(name[0])
+        else:
+            print('Wrong Input')
+    else:
+        print('Wrong Input')
+
