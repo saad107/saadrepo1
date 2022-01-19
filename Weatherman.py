@@ -1,19 +1,39 @@
+import os
+from os import path
 import argparse
+import sys
 from csv import DictReader
 from datetime import datetime
-from os import path
-
-White = "\033[37m"
-Red = "\033[31m"
-Blue = "\033[34m"
+from enum import Enum
 
 
-def run_weather_man_month(year, month, operator):
-    file_name = f'Murree_weather_{year}_{month}.txt'
-    read_weather_files(file_name, operator)
+class Colors(Enum):
+    White = "\033[37m"
+    Red = "\033[31m"
+    Blue = "\033[34m"
 
 
-def read_weather_files(file_name, operator):
+def run_weather_man_month(year, month):
+    file_name = make_file_name(year, month)
+    maximum_temperatures, minimum_temperatures, mean_humidity_values = read_weather_files(file_name)
+    maximum_temperature, minimum_temperature, average_humidity = \
+        calculate_average_temperature(maximum_temperatures, minimum_temperatures, mean_humidity_values)
+    display_average_temperatures(maximum_temperature, minimum_temperature, average_humidity)
+
+
+def make_file_name(year, month):
+    file_name = ''
+    for file in os.listdir('.'):
+        if year in file and month in file:
+            file_name = file
+    if file_name == '':
+        print('File not found')
+        sys.exit()
+    else:
+        return file_name
+
+
+def read_weather_files(file_name):
     if path.exists(file_name):
         with open(file_name, 'r') as file:
             csv_reader = DictReader(file)
@@ -24,37 +44,16 @@ def read_weather_files(file_name, operator):
                 maximum_temperatures.append(row['Max TemperatureC'])
                 minimum_temperatures.append(row['Min TemperatureC'])
                 mean_humidity_values.append(row[' Mean Humidity'])
-        calculate_monthly_results(maximum_temperatures, minimum_temperatures,
-                                  mean_humidity_values, operator)
+        return maximum_temperatures, minimum_temperatures, mean_humidity_values
     else:
         print(f"{file_name} 'this file does not exists'")
-
-
-def calculate_monthly_results(maximum_temperatures, minimum_temperatures,
-                              mean_humidity_values, operator):
-    if operator == '-a':
-        calculate_average_temperature(maximum_temperatures,
-                                      minimum_temperatures,
-                                      mean_humidity_values)
-    elif operator == '-c':
-        make_bar_chart(maximum_temperatures, minimum_temperatures)
 
 
 def calculate_average_temperature(maximum_temperatures, minimum_temperatures, mean_humidity_values):
     maximum_average_temperature = calculate_average(maximum_temperatures)
     minimum_average_temperature = calculate_average(minimum_temperatures)
     average_humidity = calculate_average(mean_humidity_values)
-
-    display_average_temperatures(maximum_average_temperature,
-                                 minimum_average_temperature,
-                                 average_humidity)
-
-
-def make_bar_chart(maximum_values, minimum_values):
-
-    display_bar_charts(maximum_values, minimum_values)
-
-    display_horizontal_bar_charts(maximum_values, minimum_values)
+    return maximum_average_temperature, minimum_average_temperature, average_humidity
 
 
 def calculate_average(temperature_values):
@@ -74,31 +73,60 @@ def display_average_temperatures(maximum_average_temperature, minimum_average_te
     print(f'Average Humidity : {humidity_average}%')
 
 
+def run_weatherman_month_bar_charts(year, month):
+    file_name = make_file_name(year, month)
+    maximum_temperatures, minimum_temperatures = read_weather_files_for_bar_charts(file_name)
+    print_bar_chart(maximum_temperatures, minimum_temperatures)
+
+
+def read_weather_files_for_bar_charts(file_name):
+    if path.exists(file_name):
+        with open(file_name, 'r') as file:
+            csv_reader = DictReader(file)
+            maximum_temperatures = []
+            minimum_temperatures = []
+            for row in csv_reader:
+                maximum_temperatures.append(row['Max TemperatureC'])
+                minimum_temperatures.append(row['Min TemperatureC'])
+        return maximum_temperatures, minimum_temperatures
+    else:
+        print(f"{file_name} 'this file does not exists'")
+
+
+def print_bar_chart(maximum_values, minimum_values):
+    display_bar_charts(maximum_values, minimum_values)
+
+    display_horizontal_bar_charts(maximum_values, minimum_values)
+
+
 def display_bar_charts(maximum_temperature_values, minimum_temperature_values):
     for iterator in range(0, len(minimum_temperature_values)):
         if maximum_temperature_values[iterator] == '':
             print('', end='')
         else:
-            print(White, iterator + 1, end='')
-            display_colored_barchart(float(maximum_temperature_values[iterator]), Red)
-            print(White, f'{int(maximum_temperature_values[iterator])}C', end='')
+            print(Colors.White.value, iterator + 1, end='')
+            display_colored_barchart(float(maximum_temperature_values[iterator]), Colors.Red.value)
+            maximum_temperature = f'{int(maximum_temperature_values[iterator])}C'
+            print(Colors.White.value, maximum_temperature, end='')
             print('')
-            print(White, iterator + 1, end='')
-            display_colored_barchart(float(minimum_temperature_values[iterator]), Blue)
-            print(White, f'{int(minimum_temperature_values[iterator])}C', end='')
+            print(Colors.White.value, iterator + 1, end='')
+            display_colored_barchart(float(minimum_temperature_values[iterator]), Colors.Blue.value)
+            minimum_temperature = f'{int(minimum_temperature_values[iterator])}C'
+            print(Colors.White.value, minimum_temperature, end='')
             print('')
 
 
 def display_horizontal_bar_charts(maximum_temperature_values, minimum_temperature_values):
-    for iterator in range(0, len(minimum_temperature_values)-1):
+    for iterator in range(0, len(minimum_temperature_values) - 1):
         if maximum_temperature_values[iterator] == '':
             print('', end='')
         else:
-            print(iterator+1, end='')
-            display_colored_barchart(float(maximum_temperature_values[iterator]), Red)
-            display_colored_barchart(float(minimum_temperature_values[iterator]), Blue)
-            print(White, f'{int(maximum_temperature_values[iterator])}C-'
-                  f'{int(minimum_temperature_values[iterator])}C', end='')
+            print(iterator + 1, end='')
+            display_colored_barchart(float(maximum_temperature_values[iterator]), Colors.Red.value)
+            display_colored_barchart(float(minimum_temperature_values[iterator]), Colors.Blue.value)
+            temperature_range = f'{int(maximum_temperature_values[iterator])}C-' \
+                                f''f'{int(minimum_temperature_values[iterator])}C'
+            print(Colors.White.value, temperature_range, end='')
             print('')
 
 
@@ -108,61 +136,74 @@ def display_colored_barchart(number, color):
         print(color + '+', end='')
 
 
-# For year
-
-def make_filename(year, number):
-    month_number = str(number)
-    datetime_object = datetime.strptime(month_number, "%m")
-    month_name = datetime_object.strftime("%b")
-    file_name = f'Murree_weather_{year}_{month_name}.txt'
-    return file_name
-
-
 def run_weather_man_year(year):
+    maximum_temperatures, minimum_temperatures, mean_humidity, \
+        maximum_temperatures_dates, minimum_temperatures_dates, mean_humidity_dates\
+        = read_files_year(year)
+
+    maximum_temperatures, minimum_temperatures, mean_humidity, maximum_temperatures_dates, \
+        minimum_temperatures_dates, mean_humidity_dates = \
+        calculate_results(maximum_temperatures, minimum_temperatures, mean_humidity,
+                          maximum_temperatures_dates, minimum_temperatures_dates, mean_humidity_dates)
+    display_results(maximum_temperatures, minimum_temperatures, mean_humidity,
+                    maximum_temperatures_dates, minimum_temperatures_dates, mean_humidity_dates)
+
+
+def read_files_year(year):
     maximum_temperatures = []
     minimum_temperatures = []
     minimum_temperature_dates = []
     maximum_temperature_dates = []
     mean_humidity = []
-    mean_humidity_dates = []                 # I need these variables in and after the for loop
-    for iterator in range(1, 13):
-        file_name = make_filename(year, iterator)
-        if path.exists(file_name):
+    mean_humidity_dates = []
+    file_collection = get_file_collection(year)
+    for iterator in file_collection:
+        if path.exists(iterator):
             max_temperature_values, min_temperature_values, mean_humidity_values, date_reading = \
-                    make_temperature_values(file_name)     # 1st function
-        # we are calculating max month temp of every month in every iteration
-            index_max = calculate_maximum_temperature(max_temperature_values)
+                read_temperature_values(iterator)
+
+            index_max = find_maximum_temperature_index(max_temperature_values)
             maximum_temperature = max_temperature_values[index_max]
             maximum_temperatures.append(maximum_temperature)
-            maximum_temperature_dates.append(calculate_date(date_reading, index_max))
-        # minimum
-            index_min = calculate_minimum_temperature(min_temperature_values)
+            maximum_temperature_dates.append(get_date(date_reading, index_max))
+
+            index_min = find_minimum_temperature_index(min_temperature_values)
             minimum_temperature = min_temperature_values[index_min]
             minimum_temperatures.append(minimum_temperature)
-            minimum_temperature_dates.append(calculate_date(date_reading, index_min))
-        # humidity
-            index_mean = calculate_maximum_temperature(mean_humidity_values)
+            minimum_temperature_dates.append(get_date(date_reading, index_min))
+
+            index_mean = find_maximum_temperature_index(mean_humidity_values)
             mean_humidity1 = mean_humidity_values[index_max]
             mean_humidity.append(mean_humidity1)
-            mean_humidity_dates.append(calculate_date(date_reading, index_mean))
-    calculate_results(maximum_temperatures, maximum_temperature_dates,
-                      minimum_temperatures, minimum_temperature_dates,
-                      mean_humidity, mean_humidity_dates)             # 2nd function
-
-# 1st function
+            mean_humidity_dates.append(get_date(date_reading, index_mean))
+    return maximum_temperatures, minimum_temperatures, mean_humidity, \
+        maximum_temperature_dates, minimum_temperature_dates, mean_humidity_dates
 
 
-def calculate_date(date_values, index):
+def get_file_collection(year):
+    file_collection = []
+    for file in os.listdir('.'):
+        if year in file:
+            file_collection.append(file)
+    size = len(file_collection)
+    if size == 0:
+        print("Files not found")
+        sys.exit()
+    else:
+        return file_collection
+
+
+def get_date(date_values, index):
     return date_values[index]
 
 
-def make_temperature_values(file_name):
+def read_temperature_values(file_name):
+    max_temperature_values = []
+    min_temperature_values = []
+    mean_humidity_values = []
     with open(file_name, 'r') as file:
         csv_reader = DictReader(file)
         date_reading = []
-        max_temperature_values = []
-        min_temperature_values = []
-        mean_humidity_values = []
         for row in csv_reader:
             max_temperature_values.append(row['Max TemperatureC'])
             min_temperature_values.append(row['Min TemperatureC'])
@@ -172,106 +213,95 @@ def make_temperature_values(file_name):
     return max_temperature_values, min_temperature_values, mean_humidity_values, date_reading
 
 
-# 2nd function
+def calculate_results(maximum_values, minimum_values, humidity_reading,
+                      maximum_date_values, minimum_date_values, date_values_humidity):
+    maximum_temperature = maximum_values[find_maximum_temperature_index(maximum_values)]
+    minimum_temperature = minimum_values[find_minimum_temperature_index(minimum_values)]
+    maximum_humidity = humidity_reading[find_maximum_temperature_index(humidity_reading)]
 
-def calculate_results(maximum_values, maximum_date_values,
-                      minimum_values, minimum_date_values,
-                      humidity_reading, date_values_humidity):
+    maximum_temperature_date = maximum_date_values[find_maximum_temperature_index(maximum_values)]
+    minimum_date_value = minimum_date_values[find_minimum_temperature_index(minimum_values)]
+    mean_humidity_date = date_values_humidity[find_maximum_temperature_index(humidity_reading)]
 
-    maximum_temperature = maximum_values[calculate_maximum_temperature(maximum_values)]
-    minimum_temperature = minimum_values[calculate_minimum_temperature(minimum_values)]
-    maximum_humidity = humidity_reading[calculate_maximum_temperature(humidity_reading)]
-
-    maximum_temperature_date = maximum_date_values[calculate_maximum_temperature(maximum_values)]
-    minimum_date_value = minimum_date_values[calculate_maximum_temperature(minimum_values)]
-    mean_humidity_date = date_values_humidity[calculate_maximum_temperature(humidity_reading)]
-
-    display_results(maximum_temperature, maximum_temperature_date,
-                    minimum_temperature, minimum_date_value,
-                    maximum_humidity, mean_humidity_date)
+    maximum_temperature_date = change_date_format(maximum_temperature_date)
+    minimum_date_value = change_date_format(minimum_date_value)
+    mean_humidity_date = change_date_format(mean_humidity_date)
+    return maximum_temperature, maximum_temperature_date, \
+        minimum_temperature, minimum_date_value, maximum_humidity, mean_humidity_date
 
 
-def calculate_maximum_temperature(temperature_values):
+def find_maximum_temperature_index(temperature_values):
     maximum1 = 0
-    maximum2 = 0
+    maximum_temperature_index = 0
     for iterator in range(0, len(temperature_values)):
         if temperature_values[iterator] != '':
             if float(temperature_values[iterator]) >= maximum1:
                 maximum1 = float(temperature_values[iterator])
-                maximum2 = iterator
-            else:
-                temperature_values[iterator] = temperature_values[iterator]
-    return maximum2
+                maximum_temperature_index = iterator
+    return maximum_temperature_index
 
 
-def calculate_minimum_temperature(temperature_values):
+def find_minimum_temperature_index(temperature_values):
     minimum1 = float(temperature_values[0])
-    minimum2 = 0
+    minimum_temperature_index = 0
     for iterator in range(1, len(temperature_values)):
         if temperature_values[iterator] != '':
             if float(temperature_values[iterator]) < minimum1:
                 minimum1 = float(temperature_values[iterator])
-                minimum2 = iterator
-            else:
-                minimum1 = minimum1
-    return minimum2
+                minimum_temperature_index = iterator
+    return minimum_temperature_index
 
 
 def display_results(maximum_temperature, maximum_date, minimum_temperature, minimum_date,
                     mean_humidity, mean_humidity_date):
-    print(f'Max temperature is {maximum_temperature}C on 'f'{change_date_format(maximum_date)}')
-    print(f'Min temperature is {minimum_temperature}C on 'f'{change_date_format(minimum_date)}')
-    print(f'Max Humidity is {mean_humidity}% on 'f'{change_date_format(mean_humidity_date)}')
+    maximum_detail = f'Max temperature is {maximum_temperature}C on 'f'{maximum_date}'
+    minimum_detail = f'Min temperature is {minimum_temperature}C on 'f'{minimum_date}'
+    mean_humidity_detail = f'Max Humidity is {mean_humidity}% on 'f'{mean_humidity_date}'
+    print(maximum_detail)
+    print(minimum_detail)
+    print(mean_humidity_detail)
 
 
 def change_date_format(date):
-    date_format = date.split('-')
-    month_number = date_format[1]
-    datetime_object = datetime.strptime(month_number, "%m")
+    year, month, day = date.split('-')
+    datetime_object = datetime.strptime(month, "%m")
     month_name = datetime_object.strftime("%b")
-    new_date = f'{date_format[2]}' + f' {month_name} '
+    new_date = f'{day}' + f' {month_name} '
     return new_date
 
 
 def find_month_name(number):
-    datetime_object = datetime.strptime(number, "%m")
-    month_name = datetime_object.strftime("%b")
-    return month_name
+    try:
+        datetime_object = datetime.strptime(number, "%m")
+        month_name = datetime_object.strftime("%b")
+        return month_name
+    except ValueError:
+        print('Wrong Input')
+        sys.exit()
 
 
-def run_weather_man(argument):
-    if argument.year != '':
-        year = argument.year.split('/')
-        if len(year) == 1:
-            run_weather_man_year(argument.year)
-            print('')
+def run_weather_man(args):
+    if args.operator == 'e':
+        if len(args.year) == 4:
+            run_weather_man_year(args.year)
         else:
             print('Wrong Input')
-    if argument.year_month != '':
-        year_charts = argument.year_month.split('/')
-        if len(year_charts) == 2:
-            run_weather_man_month(year_charts[0], find_month_name(year_charts[1]), '-c')
-            print('')
+    else:
+        year = args.year[:4]
+        month = args.year[5:]
+        month = find_month_name(month)
+        if args.operator == 'a':
+            run_weather_man_month(year, month)
+        elif args.operator == 'c':
+            run_weatherman_month_bar_charts(year, month)
         else:
             print('Wrong Input')
-    if arguments.year_and_month != '':
-        year_month = argument.year_and_month.split('/')
-        if len(year_month) == 2:
-            run_weather_man_month(year_month[0], find_month_name(year_month[1]), '-a')
-            print('')
-        else:
-            print('Wrong Input')
-
-# Main
 
 
 if __name__ == '__main__':
-    White = "\033[37m"
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('-e', '--year', action='store', default='')
-    parser.add_argument('-c', '--year_month', action='store', default='')
-    parser.add_argument('-a', '--year_and_month', action='store', default='')
+    parser.add_argument('operator', action='store', default='')
+    parser.add_argument('year', action='store', default='')
     arguments = parser.parse_args()
     run_weather_man(arguments)
 
